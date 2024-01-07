@@ -1,83 +1,52 @@
-import React from 'react';
-import Searchbar from './Searchbar/Searchbar';
-import ImageGallery from './ImageGallery/ImageGallery';
-import Loader from './Loader/Loader';
-import Button from './Button/Button';
-import Modal from './Modal/Modal';
-import axios from "axios";
-import './styles.css';
+import React, { Suspense, lazy, useState } from 'react';
+import { HashRouter, Route, Routes, Navigate, Link } from 'react-router-dom';
+import styled from 'styled-components';
 
-class App extends React.Component {
-  state = {
-    images: [],
-    loading: false,
-    page: 1,
-    query: '',
-    largeImageURL: null,
-    totalHits: 0, 
-  };
+const Home = lazy(() => import('./Home/Home'));
+const Movies = lazy(() => import('./Movies/Movies'));
+const MovieDetails = lazy(() => import('./MovieDetails/MovieDetails'));
+const Cast = lazy(() => import('./Cast/Cast'));
+const Reviews = lazy(() => import('./Reviews/Reviews'));
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.query !== this.state.query || prevState.page !== this.state.page) {
-      this.fetchImages();
-    }
-  }
+const AppContainer = styled.div`
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f5f5f5;
+`;
 
-  fetchImages = async () => {
-    const { query, page } = this.state;
-    this.setState({ loading: true });
-    
-    axios.defaults.baseURL = 'https://pixabay.com/api/';
-    const API_KEY = '41381953-52e5df98c87cb4432701fae66'
-    
-    const settings = {
-       params: {
-         key: API_KEY,
-         q: query,
-         page,
-         per_page: 12
-       }
-    }
+const Header = styled.header`
+  display: flex;
+  justify-content: flex-start;
+  padding: 20px;
+  background-color: #eee;
+`;
 
-    const data = await (await axios.get('', settings)).data
+const StyledLink = styled(Link)`
+  margin-right: 10px;
+`;
 
-    this.setState(state => ({
-      images: [...state.images, ...data.hits],
-      loading: false,
-      totalHits: data.totalHits, 
-    }));
-  };
+export const App = () => {
+  const [, setButtonClicked] = useState(false);
 
-  handleSearch = query => {
-     if (!query.trim()) return;
-    this.setState({ images: [], query, page: 1 });
-  };
-
-  loadMore = () => {
-    this.setState(state => ({ page: state.page + 1 }));
-  };
-
-  openModal = largeImageURL => {
-    this.setState({ largeImageURL });
-  };
-
-  closeModal = () => {
-    this.setState({ largeImageURL: null });
-  };
-
-  render() {
-    const { images, loading, largeImageURL, totalHits } = this.state;
-
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.handleSearch} />
-        {loading && <Loader />}
-        <ImageGallery images={images} onSelect={this.openModal} />
-        {images.length > 0 && images.length < totalHits && !loading && <Button onClick={this.loadMore} />} 
-        {largeImageURL && <Modal largeImageURL={largeImageURL} onClose={this.closeModal} />}
-      </div>
-    );
-  }
-}
-
-export default App;
+  return (
+    <HashRouter>
+      <Suspense fallback={<div>Uploading...</div>}>
+        <AppContainer>
+          <Header>
+            <StyledLink to="/">Home</StyledLink>
+            <StyledLink to="/movies">Movies</StyledLink>
+          </Header>
+          <Routes>
+            <Route path="/" element={<Home setButtonClicked={setButtonClicked} />} />
+            <Route path="/movies" element={<Movies />} />
+            <Route path="/movies/:movieId/*" element={<MovieDetails />}>
+              <Route path="cast" element={<Cast />} />
+              <Route path="reviews" element={<Reviews />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </AppContainer>
+      </Suspense>
+    </HashRouter>
+  );
+};
