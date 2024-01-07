@@ -11,14 +11,14 @@ const Reviews = lazy(() => import('./Reviews/Reviews'));
 const AppContainer = styled.div`
   font-family: Arial, sans-serif;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: #efecba;
 `;
 
 const Header = styled.header`
   display: flex;
   justify-content: flex-start;
   padding: 20px;
-  background-color: #eee;
+  background-color: #bacdf0;
 `;
 
 const StyledLink = styled(Link)`
